@@ -1,0 +1,67 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MOYNA - Live Bengali to English Translation</title>
+  <style>
+    body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem; }
+    h1 { font-size: 2rem; margin-bottom: 0.5rem; }
+    h2 { font-size: 1.2rem; margin-bottom: 2rem; color: #666; }
+    button { padding: 1rem 2rem; font-size: 1rem; margin-top: 1rem; }
+    .output { margin-top: 2rem; width: 100%; max-width: 600px; }
+    .output p { margin: 0.5rem 0; padding: 0.5rem; background: #f0f0f0; border-radius: 5px; }
+  </style>
+</head>
+<body>
+  <h1>MOYNA</h1>
+  <h2>Live Bengali to English Translation</h2>
+  <p>Click the button and speak Bengali. We'll translate it to English.</p>
+  <button onclick="startRecognition()">🎙️ Start Speaking</button>
+  <div class="output">
+    <h3>Detected Bengali:</h3>
+    <p id="bengali-output">...</p>
+    <h3>Translation:</h3>
+    <p id="english-output">...</p>
+  </div>
+
+  <script>
+    let recognition;
+    if ('webkitSpeechRecognition' in window) {
+      recognition = new webkitSpeechRecognition();
+    } else if ('SpeechRecognition' in window) {
+      recognition = new SpeechRecognition();
+    } else {
+      alert("Your browser doesn't support speech recognition.");
+    }
+
+    recognition.lang = 'bn-BD';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    function startRecognition() {
+      document.getElementById("bengali-output").textContent = "Listening...";
+      document.getElementById("english-output").textContent = "...";
+      recognition.start();
+    }
+
+    recognition.onresult = async function(event) {
+      const transcript = event.results[0][0].transcript;
+      document.getElementById("bengali-output").textContent = transcript;
+      try {
+        const res = await fetch("https://translate.googleapis.com/translate_a/single?client=gtx&sl=bn&tl=en&dt=t&q=" + encodeURIComponent(transcript));
+        const data = await res.json();
+        const translatedText = data[0].map(item => item[0]).join("");
+        document.getElementById("english-output").textContent = translatedText;
+      } catch (error) {
+        document.getElementById("english-output").textContent = "Translation failed.";
+      }
+    };
+
+    recognition.onerror = function(event) {
+      document.getElementById("bengali-output").textContent = "কোথাও একটা সমস্যা হচ্ছে, অনুগ্রহ করে পুনরায় চেষ্টা করুন। আমরা সর্বচ্চ চব্বিশ ঘণ্টার মধ্যে একাউন্টের সমস্যা সমাধান করি।";
+    };
+  </script>
+</body>
+</html>
