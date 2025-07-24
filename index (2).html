@@ -1,0 +1,69 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MOYNA - Live Bengali to English Translation</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      padding: 2rem;
+    }
+    button {
+      font-size: 1.2rem;
+      padding: 1rem 2rem;
+      margin-top: 1rem;
+    }
+    #output, #original {
+      margin-top: 1rem;
+      font-size: 1.2rem;
+    }
+  </style>
+</head>
+<body>
+  <h1>MOYNA - Live Bengali to English Translation</h1>
+  <p>Click the button and speak Bengali. We'll translate it to English.</p>
+  <button id="start">Start Speaking</button>
+  <p id="original"></p>
+  <p id="output"></p>
+
+  <script>
+    const startBtn = document.getElementById('start');
+    const output = document.getElementById('output');
+    const original = document.getElementById('original');
+
+    let recognition;
+
+    function initRecognition() {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognition = new SpeechRecognition();
+      recognition.lang = 'bn-BD';
+      recognition.interimResults = false;
+
+      recognition.onresult = async (event) => {
+        const spokenText = event.results[0][0].transcript;
+        original.textContent = "আপনার কথা: " + spokenText;
+
+        try {
+          const res = await fetch('https://api.mymemory.translated.net/get?q=' + encodeURIComponent(spokenText) + '&langpair=bn|en');
+          const data = await res.json();
+          output.textContent = "Translation: " + (data.responseData.translatedText || "No translation found.");
+        } catch (e) {
+          output.textContent = "Translation failed. Please try again.";
+        }
+      };
+
+      recognition.onerror = (event) => {
+        output.textContent = "কোথাও একটা সমস্যা হচ্ছে, অনুগ্রহ করে পুনরায় চেষ্টা করুন। আমরা সর্বচ্চ চব্বিশ ঘণ্টার মধ্যে একাউন্টের সমস্যা সমাধান করি।";
+      };
+    }
+
+    startBtn.addEventListener('click', () => {
+      initRecognition();
+      recognition.start();
+    });
+  </script>
+</body>
+</html>
